@@ -1,86 +1,35 @@
 from models import Node, Packet
+from storage import sauvegarder_csv, sauvegarder_config_json # Import du Bloc 4
 import random
-import csv # BLOC 4 : Pour la gestion du fichier CSV
 
 def run_interactive_simulation():
-    print("="*40)
-    print(" ANALYSEUR DE TRAFIC RÉSEAU (INTERACTIF)")
-    print("="*40)
-
-    # 1. Configuration du matériel par l'utilisateur
-    print("\n--- ÉTAPE 1 : Configuration du Nœud Central ---")
-    node_name = input("Nom du routeur à tester (ex: Routeur_Sud) : ")
-    try:
-        q_size = int(input(f"Capacité de la file d'attente pour {node_name} (nombre de paquets) : "))
-    except ValueError:
-        print("Erreur : Veuillez entrer un nombre entier. Valeur par défaut (5) appliquée.")
-        q_size = 5
-
-    # Création du nœud selon les choix de l'utilisateur
-    router = Node(node_name, queue_size=q_size)
-
-    # 2. Configuration du trafic
-    print("\n--- ÉTAPE 2 : Simulation du Flux ---")
-    try:
-        nb_paquets = int(input("Combien de paquets souhaitez-vous injecter dans le réseau ? : "))
-    except ValueError:
-        print("Erreur : Nombre de paquets invalide. Valeur par défaut (10) appliquée.")
-        nb_paquets = 10
-
-    print(f"\n>>> Simulation en cours sur {node_name}...")
+    print("--- TEST DU BLOC 4 ---")
+    node_name = input("Nom du routeur : ")
+    q_size = int(input("Capacité (ex: 3) : "))
     
-    succes = 0
-    echecs = 0
-    historique_simulation = [] # BLOC 4 : Initialisation de la structure de stockage
+    router = Node(node_name, queue_size=q_size)
+    nb_paquets = int(input("Nombre de paquets à envoyer (ex: 10) : "))
 
-    # Envoi des paquets
+    historique_simulation = []
+
     for i in range(1, nb_paquets + 1):
-        # On génère des données aléatoires pour simuler un vrai trafic
-        p = Packet(id=i, source="Utilisateur", destination="Serveur_Cloud", size=random.randint(10, 100))
+        p = Packet(id=i, source="PC", destination="Cloud", size=random.randint(10, 100))
+        statut = "RECU" if router.receive_packet(p) else "PERDU"
         
-        if router.receive_packet(p):
-            succes += 1
-            statut_paquet = "RECU"
-        else:
-            echecs += 1
-            statut_paquet = "PERDU"
-
-        # BLOC 4 : Enregistrement des données de chaque paquet
+        # On remplit la liste pour le storage
         historique_simulation.append({
             "ID_Paquet": p.id,
             "Source": p.source,
             "Destination": p.destination,
             "Taille": p.size,
-            "Resultat": statut_paquet
+            "Resultat": statut
         })
 
-    # BLOC 4 : Sauvegarde physique dans un fichier CSV
-    nom_fichier = "rapport_trafic.csv"
-    with open(nom_fichier, mode="w", newline="", encoding="utf-8") as f:
-        colonnes = ["ID_Paquet", "Source", "Destination", "Taille", "Resultat"]
-        writer = csv.DictWriter(f, fieldnames=colonnes)
-        writer.writeheader()
-        writer.writerows(historique_simulation)
+    # APPEL DU BLOC 4
+    sauvegarder_csv(historique_simulation)
+    sauvegarder_config_json(node_name, q_size)
     
-    print(f"\n[INFO] Données sauvegardées avec succès dans '{nom_fichier}'")
-
-    # 3. Rapport d'analyse final (Affichage console)
-    print("\n" + "="*40)
-    print(" RAPPORT D'ANALYSE")
-    print("="*40)
-    print(f"Nœud analysé : {router.name}")
-    print(f"Trafic total envoyé : {nb_paquets}")
-    print(f"Paquets délivrés : {succes}")
-    print(f"Paquets rejetés : {echecs}")
-
-    if echecs > 0:
-        taux_perte = (echecs / nb_paquets) * 100
-        print(f"\n[ALERTE] GOULOT D'ÉTRANGLEMENT DÉTECTÉ !")
-        print(f"Le nœud '{router.name}' est sous-dimensionné.")
-        print(f"Taux de perte : {taux_perte:.1f}%")
-    else:
-        print(f"\n[OK] Le réseau est fluide. La file d'attente est bien dimensionnée.")
-    print("="*40)
+    print("\nSimulation terminée. Vérifiez vos fichiers .csv et .json !")
 
 if __name__ == "__main__":
     run_interactive_simulation()
