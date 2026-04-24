@@ -8,13 +8,15 @@ class Packet:
         self.size = size
 
 class Node:
-    # L'argument queue_size doit être présent ici avec une valeur par défaut
-    def __init__(self, name, queue_size=5): 
+    def __init__(self, name, queue_size=5):
         self.name = name
-        # On utilise maxlen pour limiter automatiquement la taille de la file
-        self.queue = collections.deque(maxlen=queue_size) 
+        # On utilise maxlen pour limiter la file (Goulot d'étranglement)
+        self.queue = collections.deque(maxlen=queue_size)
+        # Bloc 4 : Dictionnaire pour stocker les nœuds voisins connectés
+        self.neighbors = {} 
 
     def receive_packet(self, packet):
+        """Tente de recevoir un paquet dans la file d'attente."""
         if len(self.queue) < self.queue.maxlen:
             self.queue.append(packet)
             print(f"[{self.name}] Paquet {packet.id} reçu.")
