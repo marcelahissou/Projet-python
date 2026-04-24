@@ -1,9 +1,10 @@
 from models import Node, Packet
 import random
+import csv # BLOC 4 : Pour la gestion du fichier CSV
 
 def run_interactive_simulation():
     print("="*40)
-    print("   ANALYSEUR DE TRAFIC RÉSEAU (INTERACTIF)")
+    print(" ANALYSEUR DE TRAFIC RÉSEAU (INTERACTIF)")
     print("="*40)
 
     # 1. Configuration du matériel par l'utilisateur
@@ -30,6 +31,7 @@ def run_interactive_simulation():
     
     succes = 0
     echecs = 0
+    historique_simulation = [] # BLOC 4 : Initialisation de la structure de stockage
 
     # Envoi des paquets
     for i in range(1, nb_paquets + 1):
@@ -38,17 +40,38 @@ def run_interactive_simulation():
         
         if router.receive_packet(p):
             succes += 1
+            statut_paquet = "RECU"
         else:
             echecs += 1
+            statut_paquet = "PERDU"
 
-    # 3. Rapport d'analyse final
+        # BLOC 4 : Enregistrement des données de chaque paquet
+        historique_simulation.append({
+            "ID_Paquet": p.id,
+            "Source": p.source,
+            "Destination": p.destination,
+            "Taille": p.size,
+            "Resultat": statut_paquet
+        })
+
+    # BLOC 4 : Sauvegarde physique dans un fichier CSV
+    nom_fichier = "rapport_trafic.csv"
+    with open(nom_fichier, mode="w", newline="", encoding="utf-8") as f:
+        colonnes = ["ID_Paquet", "Source", "Destination", "Taille", "Resultat"]
+        writer = csv.DictWriter(f, fieldnames=colonnes)
+        writer.writeheader()
+        writer.writerows(historique_simulation)
+    
+    print(f"\n[INFO] Données sauvegardées avec succès dans '{nom_fichier}'")
+
+    # 3. Rapport d'analyse final (Affichage console)
     print("\n" + "="*40)
-    print("          RAPPORT D'ANALYSE")
+    print(" RAPPORT D'ANALYSE")
     print("="*40)
-    print(f"Nœud analysé        : {router.name}")
+    print(f"Nœud analysé : {router.name}")
     print(f"Trafic total envoyé : {nb_paquets}")
-    print(f"Paquets délivrés    : {succes}")
-    print(f"Paquets rejetés     : {echecs}")
+    print(f"Paquets délivrés : {succes}")
+    print(f"Paquets rejetés : {echecs}")
 
     if echecs > 0:
         taux_perte = (echecs / nb_paquets) * 100
