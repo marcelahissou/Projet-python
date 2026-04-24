@@ -10,17 +10,29 @@ class Packet:
 class Node:
     def __init__(self, name, queue_size=5):
         self.name = name
-        # On utilise maxlen pour limiter la file (Goulot d'étranglement)
+        # maxlen limite automatiquement la taille de la file (concept de goulot)
         self.queue = collections.deque(maxlen=queue_size)
-        # Bloc 4 : Dictionnaire pour stocker les nœuds voisins connectés
+        # Bloc 5 : On utilise un dictionnaire pour stocker {nom_voisin: poids_du_lien}
         self.neighbors = {} 
 
     def receive_packet(self, packet):
-        """Tente de recevoir un paquet dans la file d'attente."""
+        """
+        Tente d'ajouter un paquet à la file d'attente.
+        Retourne True si accepté, False si rejeté (goulot d'étranglement).
+        """
         if len(self.queue) < self.queue.maxlen:
             self.queue.append(packet)
-            print(f"[{self.name}] Paquet {packet.id} reçu.")
+            # On laisse le print pour le debug console
+            print(f"[{self.name}] Paquet {packet.id} accepté dans la file.")
             return True
         else:
-            print(f"[{self.name}] !!! GOULOT D'ÉTRANGLEMENT !!! Paquet {packet.id} perdu.")
+            print(f"[{self.name}] !!! saturation !!! Paquet {packet.id} rejeté.")
             return False
+
+    def process_packet(self):
+        """
+        Simule le traitement d'un paquet (libère une place dans la file).
+        """
+        if self.queue:
+            return self.queue.popleft()
+        return None
